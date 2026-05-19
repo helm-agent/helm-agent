@@ -30,23 +30,24 @@ The `eval` subcommands also use `1` for "assertion failed" and `2` for "infra/se
 
 ## Command map (what each area is for)
 
-| Area        | What it manages                                                                                                                                                     | Top-of-mind subcommands                                                                                        |
-| ----------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------- |
-| `daemon`    | The background process itself                                                                                                                                       | `start`, `stop`, `restart`, `status`, `logs`, `reset`, `pair`, `tokens`                                        |
-| `server`    | The optional `helm server` (HTTP proxy + pairing). Default bind: `127.0.0.1:8220` with random-port fallback if 8220 is taken. Override with `--bind <host>:<port>`. | `start`, `stop`, `status`, `add`, `ls`, `rm`                                                                   |
-| `session`   | Live agent conversations                                                                                                                                            | `new`, `send`, `tail`, `ls`, `show`, `cancel`, `approve`, `attach`, `fork`, `rewind`, `search`, `rename`, `rm` |
-| `workspace` | Named bundles of projects + policy + meta-chat session                                                                                                              | `new`, `ls`, `show`, `update`, `chat`, `tail`, `rm`                                                            |
-| `cron`      | Workspace-scoped scheduled agent runs                                                                                                                               | `new`, `ls`, `show`, `update`, `enable`, `disable`, `run`, `logs`, `rm`                                        |
-| `channel`   | Chat-platform adapters per workspace (telegram / dingtalk / wechat)                                                                                                 | `status`, `configure`, `enable`, `disable`, `restart`, `pair`, `rm`                                            |
-| `provider`  | LLM providers (Anthropic-compatible)                                                                                                                                | `ls`, `templates`, `add`, `test`, `default`, `enable`, `disable`, `rm`                                         |
-| `skill`     | Claude Agent skills installed into the daemon                                                                                                                       | `install`, `ls`, `show`, `enable`, `disable`, `update`, `rm`                                                   |
-| `plugin`    | Plugins + marketplaces                                                                                                                                              | `install`, `ls`, `info`, `enable`, `disable`, `update`, `rm`, `marketplace`                                    |
-| `setup`     | First-run / rerunnable onboarding wizard                                                                                                                            | (interactive) or `provider` / `workspace` / `channel`                                                          |
-| `eval`      | Run eval specs against ephemeral sessions                                                                                                                           | `run`, `ls`, `show`                                                                                            |
-| `issue`     | Workspace-scoped issues with agent context                                                                                                                          | `new`, `ls`, `show`, `update`, `start`, `rm`                                                                   |
-| `loop`      | Workspace background loops                                                                                                                                          | `start`, `stop`, `status`                                                                                      |
-| `util`      | Agent-bridge helpers callable **only from inside a running agent** (`$HELM_SESSION_ID`)                                                                             | `send-media`                                                                                                   |
-| `update`    | Self-update the `helm-agent` npm package                                                                                                                            | (top-level, with `--tag`, `--dry-run`, `--pm`)                                                                 |
+| Area        | What it manages                                                                                                                                                                                                                                                                                                     | Top-of-mind subcommands                                                                                                  |
+| ----------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------ |
+| `daemon`    | The background process itself                                                                                                                                                                                                                                                                                       | `start`, `stop`, `restart`, `status`, `logs`, `reset`, `pair`, `tokens`                                                  |
+| `server`    | The optional `helm server` (HTTP proxy + pairing). Default bind: `127.0.0.1:8220` with random-port fallback if 8220 is taken. Override with `--bind <host>:<port>`. `restart` stops and re-spawns the server while preserving the current bearer token for ~5 min so open browser sessions reconnect transparently. | `start`, `stop`, `restart`, `status`, `add`, `ls`, `rm`                                                                  |
+| `session`   | Live agent conversations                                                                                                                                                                                                                                                                                            | `new`, `send`, `tail`, `ls`, `show`, `cancel`, `approve`, `attach`, `fork`, `rewind`, `export`, `search`, `rename`, `rm` |
+| `workspace` | Named bundles of projects + policy + meta-chat session                                                                                                                                                                                                                                                              | `new`, `ls`, `show`, `update`, `chat`, `tail`, `rm`                                                                      |
+| `cron`      | Workspace-scoped scheduled agent runs                                                                                                                                                                                                                                                                               | `new`, `ls`, `show`, `update`, `enable`, `disable`, `run`, `logs`, `rm`                                                  |
+| `channel`   | Chat-platform adapters per workspace (telegram / dingtalk / wechat)                                                                                                                                                                                                                                                 | `status`, `configure`, `enable`, `disable`, `restart`, `pair`, `rm`                                                      |
+| `provider`  | LLM providers (Anthropic-compatible)                                                                                                                                                                                                                                                                                | `ls`, `templates`, `add`, `test`, `default`, `enable`, `disable`, `rm`                                                   |
+| `skill`     | Claude Agent skills installed into the daemon                                                                                                                                                                                                                                                                       | `install`, `ls`, `show`, `enable`, `disable`, `update`, `rm`                                                             |
+| `plugin`    | Plugins + marketplaces                                                                                                                                                                                                                                                                                              | `install`, `ls`, `info`, `enable`, `disable`, `update`, `rm`, `marketplace`                                              |
+| `setup`     | First-run / rerunnable onboarding wizard                                                                                                                                                                                                                                                                            | (interactive) or `provider` / `workspace` / `channel`                                                                    |
+| `eval`      | Run eval specs against ephemeral sessions                                                                                                                                                                                                                                                                           | `run`, `ls`, `show`                                                                                                      |
+| `issue`     | Workspace-scoped issues with agent context                                                                                                                                                                                                                                                                          | `new`, `ls`, `show`, `update`, `start`, `rm`, `move`                                                                     |
+| `loop`      | Workspace background loops                                                                                                                                                                                                                                                                                          | `start`, `stop`, `status`                                                                                                |
+| `util`      | Agent-bridge helpers callable **only from inside a running agent** (`$HELM_SESSION_ID`)                                                                                                                                                                                                                             | `send-media`                                                                                                             |
+| `update`    | Self-update the `helm-agent` npm package                                                                                                                                                                                                                                                                            | (top-level, with `--tag`, `--dry-run`, `--pm`)                                                                           |
+| `doctor`    | Daemon health checks                                                                                                                                                                                                                                                                                                | (top-level, with `--fix`, `--json`)                                                                                      |
 
 ## The mental model
 
@@ -115,6 +116,8 @@ helm session cancel "$SID"                                  # cancel active run
 
 Approvals: when a tool needs human approval, the SSE stream emits an `approval` event with an approvalId. Resolve with `helm session approve <approvalId> <allow|deny>`.
 
+AskUserQuestion: when the agent invokes the `AskUserQuestion` tool against a UI-bound session (web UI / desktop / meta-chat sessions reserved with `supportsInteractiveQuestions: false`), the SSE stream emits `tool.question_required`. There is no `helm session` CLI for resolving these from the terminal — the dialog is UI-only. The daemon route `POST /sessions/:id/questions` with body `{ toolCallId, answers: ({ labels: string[] } | null)[] }` commits the answers; `answers[i]` corresponds to `questions[i]` from the event. On resolve, `tool.question_resolved` carries `answers: { question, header, chosen: string | null }[]` so UI clients can render a chip with the chosen labels (`null` = dismissed) — see `docs/designs/2026-05-18-askuser-error-chip.md`. CLI-only sessions (created via `helm session new` without the flag) keep the SDK's native AskUserQuestion behavior — empty answers, run completes.
+
 ### Listing and slicing JSON output
 
 ```
@@ -126,7 +129,39 @@ helm session search "auth bug" --deep           # body search, not just title
 
 `--fields` accepts comma-separated dotted paths and is the right way to keep parsing cheap.
 
-Each row in `helm session ls --json` carries optional `pinned?: boolean` and `archived?: boolean` flags from the per-session sidecar at `~/.helm/session-meta/<sessionId>.json`. Daemon routes accept `PATCH /sessions/:id` with `{ title?, pinned?, archived? }` to set them; deleting a session removes the sidecar.
+Each row in `helm session ls --json` carries optional `pinned?: boolean` and `archived?: boolean` flags from the per-session sidecar at `~/.helm/session-meta/<sessionId>.json`. Daemon routes accept `PATCH /sessions/:id` with `{ title?, pinned?, archived? }` to set them; deleting a session removes the sidecar. Rows also carry optional `jsonlPath?: string` — the absolute path to the SDK-written transcript on disk, honoring `CLAUDE_CONFIG_DIR`. Absent when the daemon can't locate the file. The renderer uses it for "Copy JSONL path"; CLI callers can pipe it into `jq` / `cat` without re-encoding the cwd.
+
+The daemon route `GET /sessions` also accepts `?dirs=<a>,<b>,…` (comma-separated, URL-encoded) as a multi-root alternative to `?cwd=`. The two are mutually exclusive (400 `cwd_and_dirs_exclusive`); `dirs` is soft-capped at 32 entries. The sessions rail uses this to push the active workspace's project filter down to the SDK; CLI callers keep using `--cwd`.
+
+### Exporting a transcript as Markdown
+
+`helm session export <id>` renders a human-readable transcript. Default destination is stdout.
+
+```
+helm session export sess_abc                                 # to stdout
+helm session export sess_abc --last 50                       # only the last 50 messages
+helm session export sess_abc --since <uuid>                  # messages after a uuid
+helm session export sess_abc -o transcript.md                # write to a file
+helm session export sess_abc -o transcript.md --with-attachments
+#                                                              writes transcript.md plus transcript.md.attachments/att-1.png …
+```
+
+- `--last N` and `--since <uuid>` are mutually exclusive (same semantics as `helm session show`).
+- `--with-attachments` requires `-o`; without `-o` it exits 1 with a `usage` error envelope.
+- Tool calls render as collapsed `<details>` blocks (GitHub-friendly); images render as a placeholder by default, or as sidecar files with `--with-attachments`.
+- The route response is JSON: `{ markdown, attachments?: [{filename, mime, bytesBase64}] }`. When driving the route directly, replace `{{ATTACHMENTS_DIR}}` in `markdown` with the directory you write the attachments to.
+
+### Aggregated stats
+
+```
+helm session stats <id>                  # prose summary
+helm session stats <id> --json           # SessionStats envelope
+helm workspace stats <name>              # rolled-up aggregate
+helm workspace stats <name> --per-session
+helm workspace stats <name> --json --per-session
+```
+
+Stats are computed from the on-disk SDK transcript: tokens (input/output/cache-read/cache-creation), per-model breakdown, message counts (user / assistant / tool_use / tool_result), tool-use frequency, duration (prefers `system.turn_duration` events; falls back to wall-clock), and estimated cost (USD) from a hardcoded `MODEL_PRICES` table. If any model in the session is unpriced, `costUSD` is `null` and `missingModels` lists the offenders. Assistant-line de-duplication is applied (the SDK splits one API response across N content-block lines with identical `usage`). Workspace scope: sessions whose `cwd ∈ ws.projects[]` plus `ws.metaSessionId`, deduped by sessionId.
 
 ### Workspaces
 
@@ -197,6 +232,15 @@ helm channel pair wechat                        # QR-pairing flow (wechat only)
 
 helm issue new dev --title "ship 0.0.13"
 helm issue start <issueId>                      # creates a session pre-loaded with the issue
+helm issue move 42 --from-workspace dev --from-daemon localA \
+                   --to-daemon prod --to-workspace main
+                                                # Move an issue to another daemon/workspace.
+                                                # Preserves attachments + audit log; resets
+                                                # status to triage, sessionIds/cronNames to [].
+                                                # Requires helm-server running. Exit codes:
+                                                # 0 ok · 1 validation/business · 2 helm-server
+                                                # unreachable · 3 conflict (source changed
+                                                # during move) · 4 upstream daemon unreachable.
 
 helm loop start dev                             # fire-and-forget
 helm loop status dev
@@ -215,9 +259,58 @@ helm skill install owner/repo#main
 helm skill install npm:@scope/pkg@1.2.3
 helm skill install clawhub:my-skill
 helm skill install /local/path --scope project --cwd $(pwd)
+helm skill install https://example.com          # well-known (.well-known/agent-skills/index.json)
+helm skill install wellknown:https://example.com  # force well-known route
+helm skill install git:https://git.sr.ht/~u/r   # `git:` prefix for self-hosted git hosts
 helm skill disable <name>                       # renames SKILL.md → SKILL.md.disabled
 helm skill update <name>                        # re-fetch from recorded source
 ```
+
+### Health checks (`helm doctor`)
+
+Fail-fast probe against the daemon. One check today (`no_provider`); more
+will be added.
+
+```
+helm doctor                  # run all checks
+helm doctor --fix            # apply each rule's non-interactive remediation
+helm doctor --json           # single-line JSON envelope on stdout
+```
+
+JSON envelope:
+
+```json
+{
+  "ok": true,
+  "checks": [
+    {
+      "id": "no_provider",
+      "ok": true,
+      "severity": "error",
+      "message": "provider configured",
+      "fixed": true
+    }
+  ]
+}
+```
+
+Each check carries `id`, `ok`, `severity` (`error` | `warn`), `message`,
+optional `hint` (only when failing), optional `fixed: true` (only when
+`--fix` flipped a failing check to passing on the same run).
+
+Exit codes: `0` = all error-severity checks pass; `1` = any error-severity
+check fails or snapshot probe errored; `2` = daemon unreachable.
+
+The `no_provider` rule fires when no enabled provider has a key **and**
+`allowSdkFallback` is false. `--fix` POSTs `/config/defaults` with
+`{ allowSdkFallback: true }`.
+
+`preventAppNap` is another `/config/defaults` boolean (default `false`). When
+toggled `true` on macOS, the daemon spawns `caffeinate -i -s -w <pid>` to
+suppress App Nap and system sleep during long-running work; toggling is
+hot-reload (no daemon restart). There is **no CLI flag** — toggle only via
+`POST /config/defaults { preventAppNap: true }` (e.g. from the desktop
+Settings UI). On non-darwin platforms the toggle is accepted but inert.
 
 ### Forking and rewinding
 
