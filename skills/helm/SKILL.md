@@ -227,6 +227,8 @@ helm channel status --json                      # ApiError-shaped envelope; each
                                                 # (DingTalk websocket). Absent =
                                                 # open or not applicable.
 helm channel configure dev telegram --token $TG_BOT_TOKEN
+helm channel configure dev telegram --peer-bot helpful_bot --respond-on-mention true
+                                                # peer-bot opt-in + group mention gate (Telegram)
 helm channel restart dev telegram               # idempotent; useful after network blips
 helm channel pair wechat                        # QR-pairing flow (wechat only)
 
@@ -245,6 +247,28 @@ helm issue move 42 --from-workspace dev --from-daemon localA \
 helm loop start dev                             # fire-and-forget
 helm loop status dev
 ```
+
+### Peer-bot communication (Telegram)
+
+Telegram bots can message other bots. Helm gates peer-bot inbound on a per-workspace opt-in list, and exposes an agent tool the workspace meta-session can use to originate messages to peer bots.
+
+CLI flags on `helm channel configure <ws> telegram`:
+
+- `--peer-bot <username>` — repeatable. Allow a peer bot (by `@username`, lowercased; leading `@` stripped) to DM/group this workspace's bot. Inbound from a bot whose username is not on the list is dropped with `[channel-telegram] peer-rejected-not-opted-in`.
+- `--respond-on-mention <true|false>` — in group chats, drop messages that don't `@mention` this bot's own username. DMs are unaffected. Defaults to `false` (current behavior preserved).
+
+Headless equivalents on `helm setup` / `helm setup channel`:
+
+- `--telegram-peer-bot <username>` (repeatable)
+- `--telegram-respond-on-mention <true|false>`
+
+Agent tool (workspace meta-session only): `mcp__helm_workspace__send_to_peer_bot({ username, text })`. Returns `{ ok: true, chatId, messageId }` on success, `{ ok: false, error }` on refusal. Error codes:
+
+- `peer_not_opted_in` — username not on `peerBotOptIns`
+- `telegram_not_configured` — no running Telegram adapter for this workspace
+- `peer_send_failed` — grammy raised; raw message under `detail`
+
+The returned `chatId` is the `@username` target string, not a numeric chat id — do not expect equality with future inbound `chatId` values. Outbound carries a `[helm:hop=N]` loop-guard trailer where N = `(last observed inbound hop for this peer) + 1` (or 1 with no prior inbound). Inbound at `hop > 3` is dropped with `[channel-telegram] peer-loop-dropped`; duplicate `(chatId, messageId)` is dropped with `[channel-telegram] peer-dupe-dropped`. Peer-bot replies route into the workspace meta-session; there is no dedicated child session per peer.
 
 ### Providers and skills
 
