@@ -1,0 +1,29 @@
+name: Trigger helmagent.dev deploy
+
+on:
+  release:
+    types: [edited, released]
+  push:
+    branches: [main]
+    paths:
+      - 'skills/helm/**'
+  workflow_dispatch:
+
+concurrency:
+  group: trigger-helmagent-deploy
+  cancel-in-progress: false
+
+jobs:
+  trigger:
+    runs-on: ubuntu-latest
+    permissions: {}
+    # `edited` fires for any release edit, including drafts and prereleases.
+    # Only deploy when the release is public and not a prerelease.
+    if: >-
+      github.event_name != 'release' ||
+      (github.event.release.draft == false && github.event.release.prerelease == false)
+    steps:
+      - name: Dispatch deploy in helmagent.dev
+        env:
+          GH_TOKEN: ${{ secrets.HELMAGENT_DEPLOY_TOKEN }}
+        run: gh workflow run deploy.yml --repo helm-agent/helmagent.dev --ref main
