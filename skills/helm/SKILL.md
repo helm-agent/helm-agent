@@ -175,6 +175,8 @@ helm workspace tail dev                         # SSE stream of meta-chat
 
 `--no-soul` disables SOUL.md bootstrap and identity injection on a workspace at creation time. To toggle identity injection on an existing workspace, use `helm workspace update <name> --inject-soul` / `--no-inject-soul` (parity with `--inject-helm-context` / `--inject-child-results`).
 
+On case-insensitive filesystems (darwin/win32), `--project` / `--add-project` values are rewritten to the canonical on-disk casing before they're stored in `workspace.projects[]`. `--rm-project` is **not** canonicalized so wrong-case stale entries can still be removed by exact match. If `--rm-project` produces no removal, inspect `helm workspace show <name>` to confirm the stored casing and re-run with that value.
+
 #### Issue-execution config (loop + issue runs)
 
 Workspaces carry five `IssueExecutionConfig` leaves — `extraPromptTemplate`, `preScript`, `postScript`, `permissionMode`, `loopAuto` — used by `helm loop` and `helm issue start`. Each leaf can be set per-project, with a workspace-level default as fallback.
