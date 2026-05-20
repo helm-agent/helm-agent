@@ -173,7 +173,7 @@ helm workspace chat dev "what's in flight?"     # talk to the workspace meta-cha
 helm workspace tail dev                         # SSE stream of meta-chat
 ```
 
-`--no-soul` disables SOUL.md bootstrap and identity injection on a workspace.
+`--no-soul` disables SOUL.md bootstrap and identity injection on a workspace at creation time. To toggle identity injection on an existing workspace, use `helm workspace update <name> --inject-soul` / `--no-inject-soul` (parity with `--inject-helm-context` / `--inject-child-results`).
 
 #### Issue-execution config (loop + issue runs)
 
