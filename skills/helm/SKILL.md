@@ -46,7 +46,7 @@ The `eval` subcommands also use `1` for "assertion failed" and `2` for "infra/se
 | `issue`     | Workspace-scoped issues with agent context                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           | `new`, `ls`, `show`, `update`, `start`, `rm`, `move`                                                                     |
 | `loop`      | Workspace background loops                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           | `start`, `stop`, `status`                                                                                                |
 | `util`      | Agent-bridge helpers callable **only from inside a running agent** (`$HELM_SESSION_ID`)                                                                                                                                                                                                                                                                                                                                                                                                                                                              | `send-media`                                                                                                             |
-| `update`    | Self-update the `helm-agent` npm package                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             | (top-level, with `--tag`, `--dry-run`, `--pm`)                                                                           |
+| `update`    | Self-update the `helm-agent` npm package                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             | (top-level, with `--tag`, `--canary`, `--dry-run`, `--pm`)                                                               |
 | `doctor`    | Daemon health checks                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 | (top-level, with `--fix`, `--json`)                                                                                      |
 
 ## The mental model
@@ -383,6 +383,38 @@ suppress App Nap and system sleep during long-running work; toggling is
 hot-reload (no daemon restart). There is **no CLI flag** — toggle only via
 `POST /config/defaults { preventAppNap: true }` (e.g. from the desktop
 Settings UI). On non-darwin platforms the toggle is accepted but inert.
+
+### Updating helm-agent
+
+`helm-agent` publishes two npm dist-tags: `latest` (stable) and `canary`
+(prerelease, versions like `0.0.17-canary.3`). `helm update` self-updates
+the globally-installed `helm-agent` and restarts the daemon if it was
+running.
+
+```
+helm update                          # default channel; auto-switches to
+                                     # canary when the current build is
+                                     # itself a canary prerelease, so
+                                     # canary users aren't stranded
+                                     # comparing against a stale `latest`
+helm update --canary                 # Track the canary channel explicitly
+helm update --tag latest             # Switch back to stable from canary
+helm update --tag 0.0.6              # Pin a specific version (honors downgrades)
+helm update --dry-run                # Print the install plan, don't run it
+helm update --pm pnpm --json         # Force the package manager + machine output
+```
+
+Notes:
+
+- `--canary` and `--tag` are mutually exclusive — `--canary` is shorthand
+  for `--tag canary` with cleaner help/discovery.
+- Plain `helm update` on a canary build defaults to the canary channel
+  without mutating `tagExplicit`, so it still won't downgrade you to an
+  older canary build.
+- The daemon's background update-notification poll follows the same
+  channel rule: prerelease `helm-agent` → polls `canary`; otherwise
+  `latest`. Channel switches invalidate the 24h poll cache on the next
+  tick.
 
 ### Forking and rewinding
 
