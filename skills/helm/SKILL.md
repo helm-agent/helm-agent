@@ -225,6 +225,16 @@ helm workspace update dev --unset-default-issue-loop-auto
 
 Resolution cascade per leaf is: per-project value → workspace default → `null` / `undefined` / `'bypassPermissions'` / `false` depending on the leaf. `permissionMode` additionally falls back to `sessionPolicy.permissionMode` between the workspace default and the hard `'bypassPermissions'` default.
 
+**Default notification delivery** (workspace-level; applies to every cron run + every loop iteration event):
+
+> Note: the CLI **clobbers** any existing `failureDestination` field when `--default-deliver-to` runs (cron-parity, whole-object set). The desktop UI **preserves** `failureDestination`. If you need to set `failureDestination` from the CLI, hand-edit `workspace.json`.
+
+```
+helm workspace update dev --default-deliver-to webhook:https://hooks.example.com/x
+helm workspace update dev --default-deliver-to telegram:12345 --default-deliver-best-effort
+helm workspace update dev --unset-default-delivery
+```
+
 ### Cron, channels, issues, loop
 
 ```
