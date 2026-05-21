@@ -235,6 +235,30 @@ helm workspace update dev --default-deliver-to telegram:12345 --default-deliver-
 helm workspace update dev --unset-default-delivery
 ```
 
+**Loop-delivery filters** (workspace-level + per-project; gate which loop SSE events reach the delivery sink — the UI loop view is unaffected and keeps showing every event):
+
+```
+# Event-type gate. Defaults to 'all' when unset.
+helm workspace update dev --default-issue-delivery-events completion           # only issue_finished
+helm workspace update dev --default-issue-delivery-events completion-and-stopped
+helm workspace update dev --default-issue-delivery-events none                 # mute everything
+helm workspace update dev --unset-default-issue-delivery-events
+
+helm workspace update dev --set-project-delivery-events /repo=completion
+helm workspace update dev --unset-project-delivery-events /repo
+
+# Status gate — applies only to issue_finished events; other event types pass through. Defaults to 'any' when unset.
+# 'failures-only' counts failed_agent / failed_resolve / cancelled_by_crash; cancelled_by_user / cancelled_by_shutdown / skipped are NOT failures.
+helm workspace update dev --default-issue-delivery-status-filter failures-only
+helm workspace update dev --default-issue-delivery-status-filter success-only
+helm workspace update dev --unset-default-issue-delivery-status-filter
+
+helm workspace update dev --set-project-delivery-status-filter /repo=failures-only
+helm workspace update dev --unset-project-delivery-status-filter /repo
+```
+
+Both gates must pass for an event to deliver. With both leaves unset, behavior is identical to pre-filter — every loop event reaches the configured `defaultDelivery` sink.
+
 ### Cron, channels, issues, loop
 
 ```
