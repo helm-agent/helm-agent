@@ -175,6 +175,18 @@ helm workspace tail dev                         # SSE stream of meta-chat
 
 `--no-soul` disables SOUL.md bootstrap and identity injection on a workspace at creation time. To toggle identity injection on an existing workspace, use `helm workspace update <name> --inject-soul` / `--no-inject-soul` (parity with `--inject-helm-context` / `--inject-child-results`).
 
+**Tabs · open behavior** — controls the desktop Sessions view when the user clicks a session from the sidebar / Cmd+K / issue detail sheet and the active tab is already an `agent-session`:
+
+```
+helm workspace update <name> --tab-open-behavior <replace|insertAfter>
+helm workspace update <name> --unset-tab-open-behavior   # resets to 'replace'
+```
+
+- `replace` (default) — new session takes over the active tab.
+- `insertAfter` — new session is opened as a new tab immediately after the active tab.
+
+When the active tab is a terminal, the new session/terminal is **always** inserted after the active tab regardless of this setting — so terminals are never silently clobbered.
+
 On case-insensitive filesystems (darwin/win32), `--project` / `--add-project` values are rewritten to the canonical on-disk casing before they're stored in `workspace.projects[]`. `--rm-project` is **not** canonicalized so wrong-case stale entries can still be removed by exact match. If `--rm-project` produces no removal, inspect `helm workspace show <name>` to confirm the stored casing and re-run with that value.
 
 #### Issue-execution config (loop + issue runs)
