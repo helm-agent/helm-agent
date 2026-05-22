@@ -335,12 +335,15 @@ The returned `chatId` is the `@username` target string, not a numeric chat id �
 helm provider templates                         # what built-ins exist
 helm provider add anthropic --api-key $KEY
 helm provider add --template codex              # Codex via local ChatGPT OAuth — no API key
+helm provider add --template codex --fast       # Codex with priority tier (billing-affecting)
 helm provider test anthropic                    # 1-token probe; cheap auth check
 helm provider default anthropic                 # writes HelmConfig.defaultProvider
 
 ```
 
 **Codex provider note.** The `codex` template is special: it uses local ChatGPT OAuth from `~/.codex/auth.json` (or `$CODEX_HOME/auth.json`) instead of an API key. Prereq: run `codex login` before `helm provider add --template codex`. Passing `--api-key` to `helm provider add --template codex` exits 1 with a hard error. The Helm daemon embeds the `codexthropic` proxy in-process (lazy-started on first resolution, listening on a random localhost port) — no separate process to run. `helm provider test codex` round-trips through the embedded server and exercises both OAuth refresh and upstream reachability.
+
+**Codex `--fast` flag.** Opts into priority tier (billing-affecting); maps to `service_tier: 'priority'` on the upstream Codex request. Persisted per provider — multiple codex providers can have independent settings. Only templates with `supportsFast` accept `--fast` (today: codex only); the daemon returns `400 validation_failed` otherwise. Flip from the CLI by re-running `helm setup` (the codex branch asks "Use fast (priority) tier?" with the current value as the default), via the desktop Settings → Providers toggle, or with a direct `PATCH /config/providers/<id>` body `{"fast": false}`. Toggling invalidates live sessions bound to the provider.
 
 ```
 helm skill install owner/repo                   # GitHub shorthand
