@@ -333,9 +333,15 @@ The returned `chatId` is the `@username` target string, not a numeric chat id �
 ```
 helm provider templates                         # what built-ins exist
 helm provider add anthropic --api-key $KEY
+helm provider add --template codex              # Codex via local ChatGPT OAuth — no API key
 helm provider test anthropic                    # 1-token probe; cheap auth check
 helm provider default anthropic                 # writes HelmConfig.defaultProvider
 
+```
+
+**Codex provider note.** The `codex` template is special: it uses local ChatGPT OAuth from `~/.codex/auth.json` (or `$CODEX_HOME/auth.json`) instead of an API key. Prereq: run `codex login` before `helm provider add --template codex`. Passing `--api-key` to `helm provider add --template codex` exits 1 with a hard error. The Helm daemon embeds the `codexthropic` proxy in-process (lazy-started on first resolution, listening on a random localhost port) — no separate process to run. `helm provider test codex` round-trips through the embedded server and exercises both OAuth refresh and upstream reachability.
+
+```
 helm skill install owner/repo                   # GitHub shorthand
 helm skill install owner/repo#main
 helm skill install npm:@scope/pkg@1.2.3
