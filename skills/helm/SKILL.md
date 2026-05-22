@@ -186,6 +186,16 @@ helm workspace tail dev                         # SSE stream of meta-chat
 
 `--no-soul` disables SOUL.md bootstrap and identity injection on a workspace at creation time. To toggle identity injection on an existing workspace, use `helm workspace update <name> --inject-soul` / `--no-inject-soul` (parity with `--inject-helm-context` / `--inject-child-results`).
 
+**Meta-session provider · model** — the workspace's meta-chat resolves provider + model as `ws.metaProvider ?? ws.sessionPolicy.provider` and `ws.metaModel ?? ws.sessionPolicy.model`. Edits take effect on the next meta-session reservation (no live mid-turn flip — restart the meta-chat to apply, e.g. via the `/new` slash command).
+
+```
+helm workspace update dev --meta-provider anthropic       # explicit meta-provider override
+helm workspace update dev --unset-meta-provider           # inherit from sessionPolicy.provider
+helm workspace update dev --meta-model claude-opus-4-7    # (already documented; unchanged)
+```
+
+Setting `--meta-provider` to a concrete id whose catalog does not contain the workspace's current `metaModel` auto-clears `metaModel` to `null` so the dropdown stays coherent. `--unset-meta-provider` (inherit) does NOT auto-clear `metaModel`.
+
 **Tabs · open behavior** — controls the desktop Sessions view when the user clicks a session from the sidebar / Cmd+K / issue detail sheet and the active tab is already an `agent-session`:
 
 ```
