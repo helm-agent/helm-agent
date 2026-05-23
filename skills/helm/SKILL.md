@@ -403,9 +403,13 @@ optional `hint` (only when failing), optional `fixed: true` (only when
 Exit codes: `0` = all error-severity checks pass; `1` = any error-severity
 check fails or snapshot probe errored; `2` = daemon unreachable.
 
-The `no_provider` rule fires when no enabled provider has a key **and**
-`allowSdkFallback` is false. `--fix` POSTs `/config/defaults` with
-`{ allowSdkFallback: true }`.
+The `no_provider` rule fires when no enabled provider qualifies — a
+provider qualifies if it's enabled AND either has a stored key OR is a
+`noApiKey` template (`codex`, `claude-code`). `--fix` POSTs
+`/config/bootstrap-claude-code` with `{ setDefault: true }` (single
+transactional daemon write that ensures the `claude-code` provider
+exists, enables it, and sets it as default). See
+`docs/designs/2026-05-23-claude-code-provider.md`.
 
 `preventAppNap` is another `/config/defaults` boolean (default `false`). When
 toggled `true` on macOS, the daemon spawns `caffeinate -i -s -w <pid>` to
