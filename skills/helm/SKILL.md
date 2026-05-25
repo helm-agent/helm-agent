@@ -423,8 +423,8 @@ Settings UI). On non-darwin platforms the toggle is accepted but inert.
 
 `helm-agent` publishes two npm dist-tags: `latest` (stable) and `canary`
 (prerelease, versions like `0.0.17-canary.3`). `helm update` self-updates
-the globally-installed `helm-agent` and restarts the daemon if it was
-running.
+the globally-installed `helm-agent` and restarts the daemon and
+helm-server (if either was running) so they pick up the new bundle.
 
 ```
 helm update                          # default channel; auto-switches to
@@ -450,6 +450,16 @@ Notes:
   channel rule: prerelease `helm-agent` → polls `canary`; otherwise
   `latest`. Channel switches invalidate the 24h poll cache on the next
   tick.
+- `--json` success envelope (post-install): `{ ok: true, from, to, pm,
+restartedDaemon, restartedServer, restartError?, restartServerError? }`.
+  Both `restartedDaemon` and `restartedServer` are always present (false
+  when the corresponding process wasn't running, or when the restart
+  attempt failed); the matching `restartError` / `restartServerError`
+  string is only set on a failed restart. A failed restart does NOT
+  change the exit code — only install failures exit non-zero. Note that
+  `runServerRestart` prints human progress lines on stdout, so callers
+  must parse the JSON envelope from the **last** non-empty line on
+  stdout, not the only line.
 
 ### Forking and rewinding
 
