@@ -9,8 +9,8 @@ description: Use the `helm` CLI (the daemon-backed wrapper around `@anthropic-ai
 
 ## Always do this first
 
-1. `helm daemon status` — confirm the daemon is up. Exit code `2` from any `helm` invocation means daemon unreachable; start it with `helm start` (brings up daemon + server, background, idempotent).
-2. `helm <area> --help` — discoverability. Every area (`session`, `workspace`, `cron`, `channel`, `provider`, `skill`, `plugin`, `eval`, `issue`, `loop`, `setup`, `daemon`, `server`, `util`) has its own help. Add `--help --json` to get a machine schema instead of prose. The top-level `helm start` umbrella has no `--help` of its own; see `helm --help`.
+1. `helm daemon status` — confirm the daemon is up. Exit code `2` from any `helm` invocation means daemon unreachable; start it with `helm start` (brings up daemon + server, background, idempotent). After a CLI upgrade or config change, run `helm restart` to bounce both daemon and server (not idempotent; always re-spawns).
+2. `helm <area> --help` — discoverability. Every area (`session`, `workspace`, `cron`, `channel`, `provider`, `skill`, `plugin`, `eval`, `issue`, `loop`, `setup`, `daemon`, `server`, `util`) has its own help. Add `--help --json` to get a machine schema instead of prose. The top-level `helm start` / `helm restart` umbrellas have no `--help` of their own; see `helm --help`.
 3. Default to `--json` whenever you need to parse output. JSONL is used for list outputs (`helm session ls`, `helm cron logs`). Stream outputs from `helm session send` / `session tail` are SSE-style chunks on stdout.
 
 ## Exit codes (uniform across the CLI)
