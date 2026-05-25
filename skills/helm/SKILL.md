@@ -133,6 +133,14 @@ helm session search "auth bug" --deep           # body search, not just title
 
 Each row in `helm session ls --json` carries optional `pinned?: boolean` and `archived?: boolean` flags from the per-session sidecar at `~/.helm/session-meta/<sessionId>.json`. Flip them from the terminal with `helm session archive <id> [<id>...] [--unarchive]` and `helm session pin <id> [<id>...] [--unpin]` (variadic, JSONL one line per id, per-id failures don't abort the batch). The underlying daemon route `PATCH /sessions/:id` with `{ title?, pinned?, archived? }` is also still callable directly. Deleting a session removes the sidecar. Rows also carry optional `jsonlPath?: string` — the absolute path to the SDK-written transcript on disk, honoring `CLAUDE_CONFIG_DIR`. Absent when the daemon can't locate the file. The renderer uses it for "Copy JSONL path"; CLI callers can pipe it into `jq` / `cat` without re-encoding the cwd.
 
+Rows also carry optional `currentModel?: string` and `currentProviderId?: string` — the currently-bound model and provider for the session. Sourced from the active session map (live SDK binding) when running, with fallback to the meta sidecar's `lastProviderId` / `lastModel` (written by the daemon after every successful provider resolution). Survives daemon restart for idle sessions. Use them to render a routing chip on session rows without an extra fetch.
+
+### Switching provider/model mid-session
+
+`helm session routing <id> --provider <id> --model <name>` sets the new default routing for the session. Applies after the current turn finishes (no in-flight cancel). No-op when both fields match the current binding. Direct daemon call: `PATCH /sessions/:id/routing` with body `{ providerId, model }` → `{ ok: true, changed: boolean }`.
+
+For one-off per-turn overrides, send a message with `providerOverride` (and/or the existing `modelOverride`) in the request body: `POST /sessions/:id/messages { text, providerOverride?, modelOverride? }`. The session reverts to its pinned routing on the next turn.
+
 The daemon route `GET /sessions` also accepts `?dirs=<a>,<b>,…` (comma-separated, URL-encoded) as a multi-root alternative to `?cwd=`. The two are mutually exclusive (400 `cwd_and_dirs_exclusive`); `dirs` is soft-capped at 32 entries. The sessions rail uses this to push the active workspace's project filter down to the SDK; CLI callers keep using `--cwd`.
 
 ### Exporting a transcript as Markdown
@@ -164,6 +172,8 @@ helm workspace stats <name> --json --per-session
 ```
 
 Stats are computed from the on-disk SDK transcript: tokens (input/output/cache-read/cache-creation), per-model breakdown, message counts (user / assistant / tool_use / tool_result), tool-use frequency, duration (prefers `system.turn_duration` events; falls back to wall-clock), and estimated cost (USD) from a hardcoded `MODEL_PRICES` table. `costUSD` is a **partial sum** across priced models — the total for whichever models resolved. To detect incompleteness, branch on `missingModels.length > 0`, not on `costUSD === null` (kept nullable in the schema for forward compat; runtime always emits a number). The aggregator excludes the `<synthetic>` SDK sentinel from pricing so it never appears in `missingModels`. Model-id normalization tries: direct hit → strip `<provider>/` prefix + dots→dashes → strip `-YYYYMMDD` date suffix. Assistant-line de-duplication is applied (the SDK splits one API response across N content-block lines with identical `usage`). Workspace scope: sessions whose `cwd ∈ ws.projects[]` plus `ws.metaSessionId`, deduped by sessionId.
+
+`SessionStats` also carries optional `contextUsage: { used, max, percent }` — the prompt-side occupancy of the model's context window for the LAST assistant turn (`used = input + cacheRead + cacheCreation`). `max` is looked up from a static table keyed by normalized model id (same normalization as `costUSD`). Omitted when the model is unknown or no assistant turn has happened yet — clients should branch on `contextUsage !== undefined` before reading.
 
 ### Workspace overview (counts/inventory)
 
