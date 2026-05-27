@@ -411,6 +411,23 @@ helm skill disable <name>                       # renames SKILL.md → SKILL.md.
 helm skill update <name>                        # re-fetch from recorded source
 ```
 
+**Helm runtime plugins** (separate from `helm cc-plugin`; these are TS modules the daemon dynamically imports — hooks, providers, channels, slash commands):
+
+```
+helm plugin list                                                # discovered + gating state
+helm plugin info @owner/helm-plugin-foo                         # scoped npm package keys are supported
+helm plugin install @owner/helm-plugin-foo                      # fetch latest from default registry
+helm plugin install @owner/helm-plugin-foo@1.2.3                # exact version
+helm plugin install @owner/helm-plugin-foo@beta                 # dist-tag
+helm plugin install @owner/helm-plugin-foo --registry https://x # private registry
+helm plugin update @owner/helm-plugin-foo                       # noop when up to date; refetch via sidecar
+helm plugin uninstall @owner/helm-plugin-foo                    # rm dir + drop from plugins.enabled/disabled
+helm plugin enable @owner/helm-plugin-foo                       # toggle without (re)installing
+helm plugin disable <name>
+```
+
+`install` writes a `.helm-install.json` sidecar recording `{ pkg, registry, spec, version, installedAt }`. Default `--registry` resolves to `configStore.npmRegistry`, falling back to `https://registry.npmjs.org`. Tarball fetch + extract is direct HTTPS — no `npm` on PATH required. Two-rename atomic swap rolls back to the prior install on failure. Auto-enables the key in `~/.helm/config.json` (strips a matching `disabled` entry too); the daemon picks it up on next restart. Restart hint is printed after every install / update. `--json` envelope on every subcommand carries machine-readable `outcome` codes (`installed`, `replaced`, `updated`, `noop`, `uninstalled`, or error codes `not-installed`, `no-sidecar`, `sidecar-mismatch`, `not-a-plugin`, `network`, `extract`, `validation-failed`, `internal`). See `docs/designs/2026-05-27-helm-plugin-npm-install.md` and `docs/designs/2026-05-27-helm-plugin-scoped-npm.md`.
+
 ### Health checks (`helm doctor`)
 
 Fail-fast probe against the daemon. One check today (`no_provider`); more
