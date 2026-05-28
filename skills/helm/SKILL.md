@@ -265,6 +265,7 @@ Resolution cascade per leaf is: per-project value → workspace default → `nul
 ```
 helm workspace update dev --default-deliver-to webhook:https://hooks.example.com/x
 helm workspace update dev --default-deliver-to telegram:12345 --default-deliver-best-effort
+helm workspace update dev --default-deliver-to dingtalk:<conversationId>
 helm workspace update dev --unset-default-delivery
 ```
 
@@ -296,6 +297,8 @@ Both gates must pass for an event to deliver. With both leaves unset, behavior i
 
 ```
 helm cron new dev --schedule "0 9 * * *" --prompt "daily standup digest"
+helm cron new dev digest --cwd /repo --cron "0 9 * * *" --instruction "..." --permission-mode plan \
+  --deliver-to dingtalk:<conversationId>            # per-task DingTalk delivery
 helm cron run <cronId>                          # async by default
 helm cron logs <cronId>
 
