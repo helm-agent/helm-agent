@@ -22,6 +22,8 @@ description: Drive the `helm` CLI. Use whenever the user mentions `helm` or any 
 
 The `eval` subcommands also use `1` for "assertion failed" and `2` for "infra/setup error".
 
+`helm daemon stop`, `helm daemon restart`, and `helm restart` (the umbrella) ALSO exit `2` when the daemon has any running loops or in-flight cron runs. Stderr lists what's in-flight. Pass `--force` to abort and proceed anyway. Sessions/PTYs are intentionally not counted (every open chat tab would otherwise trip the gate). `helm server stop/restart` is unaffected — the server hosts no loops/crons.
+
 ## State dirs
 
 - `HELM_HOME` overrides `~/.helm`. Pair with `CLAUDE_CONFIG_DIR` if you need to fully isolate state (e.g., E2E tests).
@@ -551,4 +553,4 @@ When unsure between fork and rewind: **fork** when you want a clean policy/state
 2. `helm <area> <sub> --help --json` for the exact flag schema.
 3. `helm daemon logs` (or merge across processes with `cat $HELM_HOME/logs/*.log | jq -s 'sort_by(.ts)'`) to see what the daemon actually did.
 4. If a session is wedged: `helm session cancel <id>`, then `helm session tail <id>` to confirm it returned to idle. If state is bad, `helm session fork <id>` to escape.
-5. If the daemon is wedged: `helm daemon restart` (force-kills a stale daemon, then starts).
+5. If the daemon is wedged: `helm daemon restart` (force-kills a stale daemon, then starts). If a loop/cron is in-flight you'll get exit 2 with an in-flight summary — re-run with `--force` to abort and continue.
