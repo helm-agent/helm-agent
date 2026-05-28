@@ -1,6 +1,6 @@
 ---
 name: helm
-description: Use the `helm` CLI to drive long-lived agent sessions, workspaces, cron tasks, chat channels, providers, skills, and plugins. Trigger this skill whenever the user mentions `helm`, `helm daemon`, `helm session`, `helm workspace`, `helm cron`, `helm channel`, `helm provider`, `helm skill`, `helm cc-plugin`, "the helm CLI", "the helm agent", or anything about driving a Helm session/workspace/channel from the terminal — even if they don't say the word "CLI". Use it to plan multi-step Helm operations, to translate intent into the right subcommands and flags, and to read `--json` output reliably.
+description: Drive the `helm` CLI. Use whenever the user mentions `helm` or any `helm <area>` command.
 ---
 
 # helm CLI
