@@ -178,6 +178,8 @@ Stats are computed from the on-disk SDK transcript: tokens (input/output/cache-r
 
 `SessionStats` also carries optional `contextUsage: { used, max, percent }` — the prompt-side occupancy of the model's context window for the LAST assistant turn (`used = input + cacheRead + cacheCreation`). `max` is looked up from a static table keyed by normalized model id (same normalization as `costUSD`). Omitted when the model is unknown or no assistant turn has happened yet — clients should branch on `contextUsage !== undefined` before reading.
 
+`SessionStats` also carries optional `cacheWindow: { anchorTs, ttlSeconds: 300 | 3600 }` — backing the live prompt-cache TTL countdown ("cache 51m07s / COLD"). `anchorTs` is the most recent assistant turn's timestamp (cache last refreshed); `ttlSeconds` is read from the most recent assistant with a non-zero `cache_creation` bucket (`ephemeral_1h_input_tokens > 0 → 3600`, else `→ 300`; legacy flat `cache_creation_input_tokens` folds to 300). Omitted when there is no assistant turn or no observed `cache_creation` bucket — clients branch on `cacheWindow !== undefined` and compute `remaining = ttlSeconds − max(0, (now − anchorTs)/1000)` (≤ 0 ⇒ COLD).
+
 ### Workspace overview (counts/inventory)
 
 ```
