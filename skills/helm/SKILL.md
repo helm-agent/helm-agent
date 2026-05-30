@@ -442,8 +442,8 @@ helm plugin disable <name>
 
 ### Health checks (`helm doctor`)
 
-Fail-fast probe against the daemon. One check today (`no_provider`); more
-will be added.
+Fail-fast probe against the daemon. Two checks today (`no_provider`,
+`terminal_runtime`); more will be added.
 
 ```
 helm doctor                  # run all checks
@@ -475,13 +475,32 @@ optional `hint` (only when failing), optional `fixed: true` (only when
 Exit codes: `0` = all error-severity checks pass; `1` = any error-severity
 check fails or snapshot probe errored; `2` = daemon unreachable.
 
-The `no_provider` rule fires when no enabled provider qualifies — a
-provider qualifies if it's enabled AND either has a stored key OR is a
-`noApiKey` template (`codex`, `claude-code`). `--fix` POSTs
+The `no_provider` rule (severity `error`) fires when no enabled provider
+qualifies — a provider qualifies if it's enabled AND either has a stored key
+OR is a `noApiKey` template (`codex`, `claude-code`). `--fix` POSTs
 `/config/bootstrap-claude-code` with `{ setDefault: true }` (single
 transactional daemon write that ensures the `claude-code` provider
 exists, enables it, and sets it as default). See
 `docs/designs/2026-05-23-claude-code-provider.md`.
+
+The `terminal_runtime` rule (severity `warn`, no `--fix`) reports whether
+node-pty's native module loaded in the daemon. It reads the
+`terminal: { available, error?, runtime, platform }` field on `GET /config`
+(probed lazily on first read, then cached). When unavailable (the canonical
+case is Linux arm64, where node-pty ships no prebuild and must compile from
+source) it emits a remediation hint covering the build toolchain
+(`make` + `python3` + a C/C++ compiler) and the per-installer build-script
+approval (`pnpm approve-builds` / `pnpm add -g --allow-build=node-pty` ·
+`bun pm trust node-pty` · npm runs scripts by default). Because it is `warn`,
+an unavailable terminal keeps `helm doctor`'s exit code at 0 — only the
+terminal tab is degraded; every other command works. See
+`docs/designs/2026-05-30-linux-arm64-node-pty-lazy-load.md`.
+
+Relatedly, when the terminal tab can't spawn because node-pty failed to load,
+the daemon's `POST /terminals` returns a `pty_unavailable` error envelope
+(HTTP 500, parity with `pty_runtime_failure`) whose `message` carries the
+actionable remediation and whose `details` include `{ platform, arch, runtime,
+reason }` — instead of crashing the daemon at startup as it did pre-fix.
 
 `preventAppNap` is another `/config/defaults` boolean (default `false`). When
 toggled `true` on macOS, the daemon spawns `caffeinate -i -s -w <pid>` to
