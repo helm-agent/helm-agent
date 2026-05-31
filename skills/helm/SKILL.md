@@ -442,8 +442,8 @@ helm plugin disable <name>
 
 ### Health checks (`helm doctor`)
 
-Fail-fast probe against the daemon. Two checks today (`no_provider`,
-`terminal_runtime`); more will be added.
+Fail-fast probe against the daemon. Three checks today (`no_provider`,
+`terminal_runtime`, `sdk_runtime`); more will be added.
 
 ```
 helm doctor                  # run all checks
@@ -495,6 +495,23 @@ approval (`pnpm approve-builds` / `pnpm add -g --allow-build=node-pty` ·
 an unavailable terminal keeps `helm doctor`'s exit code at 0 — only the
 terminal tab is degraded; every other command works. See
 `docs/designs/2026-05-30-linux-arm64-node-pty-lazy-load.md`.
+
+The `sdk_runtime` rule (severity `error`, has `--fix`) reports whether the
+`@anthropic-ai/claude-agent-sdk` platform `claude` binary resolves. The SDK
+ships it as an os/cpu-filtered **optional** sub-package
+(`@anthropic-ai/claude-agent-sdk-<platform>-<arch>`), which npm can silently drop
+(`--omit=optional`, transitive-optional resolver bugs, registry hiccups), leaving
+every chat send failing with an opaque 502 "Native CLI binary not found". It
+reads the `sdkBinary: { available, platform, arch, pkg, sdkVersion, error? }`
+field on `GET /config` (re-probed each read, never cached, so `--fix` self-heal is
+visible without a daemon restart). Because the SDK is the engine for **every**
+provider, a missing binary breaks **all** chat, so this check is `error` and flips
+`helm doctor`'s exit code to 1. `--fix` runs a surgical, version-pinned global
+install of just that binary (`<pm> install -g
+@anthropic-ai/claude-agent-sdk-<platform>@<sdkVersion>` via the same pm-detection
+as `helm update`; no daemon restart — the binary resolves per `query()`). An old
+daemon predating the `sdkBinary` field reports `ok` (absence ⇒ unknown), like
+`terminal_runtime`. See `docs/designs/2026-05-31-sdk-runtime-doctor-check.md`.
 
 Relatedly, when the terminal tab can't spawn because node-pty failed to load,
 the daemon's `POST /terminals` returns a `pty_unavailable` error envelope
