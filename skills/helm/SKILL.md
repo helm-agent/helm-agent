@@ -329,10 +329,18 @@ helm issue move 42 --from-workspace dev --from-daemon localA \
                                                 # Move an issue to another daemon/workspace.
                                                 # Preserves attachments + audit log; resets
                                                 # status to triage, sessionIds/cronNames to [].
+                                                # Strips remote sync links (GitHub/Linear) —
+                                                # the binding is workspace-scoped and does not
+                                                # travel; re-bind in the target workspace.
                                                 # Requires helm-server running. Exit codes:
                                                 # 0 ok · 1 validation/business · 2 helm-server
                                                 # unreachable · 3 conflict (source changed
                                                 # during move) · 4 upstream daemon unreachable.
+#
+# --json emits { ok, target, warning?, remoteLinksStripped? }. remoteLinksStripped
+# (present only when the moved issue had remote sync links) lists { source, remoteKey?,
+# url } for each link dropped, so you can re-bind them in the target workspace. Human
+# mode prints the same as a stderr warning.
 
 helm loop start dev                             # fire-and-forget
 helm loop status dev
