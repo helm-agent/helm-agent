@@ -56,7 +56,7 @@ The `eval` subcommands also use `1` for "assertion failed" and `2` for "infra/se
 
 ## The mental model
 
-A **workspace** is the policy + project bundle. A **session** is a live agent conversation. Workspaces have a singleton **meta-chat** session (`helm workspace chat`). Cron, channels, and issues are workspace-scoped. Providers and skills are global.
+A **workspace** is the policy + project bundle. A **session** is a live agent conversation. Workspaces have one or more **meta-chat** sessions (`helm workspace chat`); one is the **active** session — the inbound-channel (Telegram/DingTalk) target and the CLI/`chat` default. `--fresh` starts a new, additional session (non-destructive — old sessions are kept); the desktop UI's chat sidebar lists them and lets you view any session or "star" a different one as active. Cron, channels, and issues are workspace-scoped. Providers and skills are global.
 
 When you create a session with `helm session new --workspace dev`, the session inherits policy defaults from the workspace, and CLI flags then whole-field-replace per field. **Policy flags are session-fixed** — they persist across daemon re-inits within a daemon lifetime, but are lost on daemon restart. If you need a clean policy slate, branch the session.
 
@@ -589,7 +589,7 @@ When unsure between branch and rewind: **branch** when you want a clean policy/s
 - `helm util send-media` only works **inside** a running agent turn (it reads `$HELM_SESSION_ID`). It targets the active turn's Telegram chat — don't call it from a regular shell.
 - `helm session send <id> -` reads the prompt from stdin. Use it for multi-line prompts or piped content; don't try to `helm session send "$SID" "$(cat file.md)"` for big files.
 - `--help --json` returns the per-command schema. This is the most reliable way to discover flags programmatically without scraping prose.
-- Workspaces cascade on delete: `helm workspace rm dev` also drops the meta-chat session. Confirm with the user before running it.
+- Workspaces cascade on delete: `helm workspace rm dev` also drops all of the workspace's meta-chat sessions. Confirm with the user before running it.
 - `helm daemon reset` blows away daemon state. Treat it like `rm -rf` on `$HELM_HOME` — confirm first.
 
 ## Daemon & server process metrics
