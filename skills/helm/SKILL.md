@@ -272,8 +272,11 @@ Resolution cascade per leaf is: per-project value → workspace default → `nul
 helm workspace update dev --default-deliver-to webhook:https://hooks.example.com/x
 helm workspace update dev --default-deliver-to telegram:12345 --default-deliver-best-effort
 helm workspace update dev --default-deliver-to dingtalk:<conversationId>
+helm workspace update dev --default-deliver-to wechat:<userId>   # best-effort; see WeChat caveat below
 helm workspace update dev --unset-default-delivery
 ```
+
+Delivery channels: `webhook` · `telegram` · `dingtalk` · `wechat`. WeChat caveat: outbound needs a `context_token` harvested from an inbound message, held in-memory and lost on daemon restart — a proactive cron/loop push may silently not arrive until the recipient has messaged the bot since the last restart (best-effort, mirrors DingTalk otherwise).
 
 **Loop-delivery filters** (workspace-level + per-project; gate which loop SSE events reach the delivery sink — the UI loop view is unaffected and keeps showing every event):
 
@@ -305,6 +308,8 @@ Both gates must pass for an event to deliver. With both leaves unset, behavior i
 helm cron new dev --schedule "0 9 * * *" --prompt "daily standup digest"
 helm cron new dev digest --cwd /repo --cron "0 9 * * *" --instruction "..." --permission-mode plan \
   --deliver-to dingtalk:<conversationId>            # per-task DingTalk delivery
+helm cron new dev digest --cwd /repo --cron "0 9 * * *" --instruction "..." --permission-mode plan \
+  --deliver-to wechat:<userId>                      # per-task WeChat delivery (best-effort; see caveat above)
 helm cron run <cronId>                          # async by default
 helm cron logs <cronId>
 
