@@ -594,6 +594,8 @@ The server binds `127.0.0.1:8220` by default (loopback only). To reach it from a
   helm server start --bind 0.0.0.0:8220 --hostname helm.tailnet-1234.ts.net
   ```
 
+- **On loopback, no code is needed by default.** `HELM_LOOPBACK_NOAUTH` (default on) exempts loopback callers from the bearer, so the printed `https://127.0.0.1:8220/` login URL carries no `#code=` and a local browser / `curl` just works. Network + `--hostname` URLs still print `#code=`. Set `HELM_LOOPBACK_NOAUTH=0` on shared/multi-user machines to require the bearer (and restore `#code=`) on loopback too. See `docs/designs/2026-07-02-loopback-noauth.md`.
+
 **Trusting the Helm CA.** The auto cert is self-signed, so browsers show "Not secure" until the root is trusted. Export it once and install on the client:
 
 ```bash
